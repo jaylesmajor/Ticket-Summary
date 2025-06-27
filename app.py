@@ -4,6 +4,7 @@ from langchain import OpenAI
 import streamlit as st
 import tempfile
 import os
+import re                   # ← new import
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,7 +12,12 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     raise RuntimeError("Missing OPENAI_API_KEY in your .env file")
 os.environ["OPENAI_API_KEY"] = api_key
-llm = OpenAI(temperature=0,max_tokens=1500,top_p=0.9)
+llm = OpenAI(temperature=0, max_tokens=1500, top_p=0.9)
+
+# ← new helper
+def remove_first_sentence(text: str) -> str:
+    parts = re.split(r'(?<=[\.!?])\s+', text, maxsplit=1)
+    return parts[1] if len(parts) > 1 else ""
 
 def summarize_pdf(pdf_file):
     # write uploaded bytes to a temp file
@@ -28,7 +34,10 @@ def summarize_pdf(pdf_file):
 
     # summarize
     chain = load_summarize_chain(llm, chain_type="refine")
-    return chain.run(docs)
+    raw = chain.run(docs)
+
+    # strip off the first sentence before returning
+    return remove_first_sentence(raw)
 
 st.title("Ticket Summarizer")
 
