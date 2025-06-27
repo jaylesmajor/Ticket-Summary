@@ -5,7 +5,6 @@ from langchain.prompts import PromptTemplate
 import streamlit as st
 import tempfile
 import os
-import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,18 +14,13 @@ if api_key is None:
 os.environ["OPENAI_API_KEY"] = api_key
 llm = OpenAI(temperature=0, max_tokens=2000, top_p=0.9)
 
-# helper to drop first two sentences
-def remove_first_two_sentences(text: str) -> str:
-    parts = re.split(r'(?<=[\.!?])\s+', text)
-    return " ".join(parts[2:]) if len(parts) > 2 else ""
-
 # prompt that asks for a Markdown bullet list
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
-Summarize the following ticket information as a **detailed** Markdown bullet list.  
-- Include **at least 8 bullets** covering every major section (overview, assignments, testing, pending, next steps, follow-ups, metadata, requester).  
-- Each bullet must start with "- ".  
+Summarize the following ticket information as a **detailed** Markdown bullet list.
+- Include at least 8 bullets covering every major section (overview, assignments, testing, pending, next steps, follow-ups, metadata, requester).
+- Each bullet must start with "- ".
 - Don’t omit minor but relevant details.
 
 {text}
@@ -42,18 +36,16 @@ def summarize_pdf(pdf_file):
     # load & split
     loader = PyPDFLoader(tmp_path)
     docs = loader.load_and_split()
-
-    # cleanup
     os.remove(tmp_path)
 
-    # summarize into bullets, then strip first two sentences
+    # map_reduce chain for fuller bullet coverage
     chain = load_summarize_chain(
         llm,
-        chain_type="refine",
+        chain_type="map_reduce",        # ← changed here
         question_prompt=bullet_prompt
     )
-    raw = chain.run(input_documents=docs)
-    return remove_first_two_sentences(raw)
+    # pass docs by keyword
+    return chain.run(input_documents=docs)
 
 st.title("Ticket Summarizer")
 
