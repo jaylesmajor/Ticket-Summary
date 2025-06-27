@@ -13,7 +13,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     raise RuntimeError("Missing OPENAI_API_KEY in your .env file")
 os.environ["OPENAI_API_KEY"] = api_key
-llm = OpenAI(temperature=0, max_tokens=1500, top_p=0.9)
+llm = OpenAI(temperature=0, max_tokens=2000, top_p=0.9)
 
 # helper to drop first two sentences
 def remove_first_two_sentences(text: str) -> str:
@@ -24,7 +24,7 @@ def remove_first_two_sentences(text: str) -> str:
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
-Provide the relevant details in bullet points, arrange it from key persons and their contact details, then the details of the ticket, then what happened and how it happened and lastly the next steps :
+Provide the relevant details in bullet points:
 {text}
 """
 )
