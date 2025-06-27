@@ -24,8 +24,10 @@ def remove_first_two_sentences(text: str) -> str:
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
-Summarize the following text as a Markdown bullet list.
-Each bullet must start with "- " and nothing else:
+Summarize the following ticket information as a **detailed** Markdown bullet list.  
+- Include **at least 8 bullets** covering every major section (overview, assignments, testing, pending, next steps, follow-ups, metadata, requester).  
+- Each bullet must start with "- ".  
+- Don’t omit minor but relevant details.
 
 {text}
 """
