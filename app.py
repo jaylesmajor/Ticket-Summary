@@ -1,7 +1,7 @@
 from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import PyPDFLoader
 from langchain import OpenAI
-from langchain.prompts import PromptTemplate    # ← new import
+from langchain.prompts import PromptTemplate
 import streamlit as st
 import tempfile
 import os
@@ -20,11 +20,13 @@ def remove_first_two_sentences(text: str) -> str:
     parts = re.split(r'(?<=[\.!?])\s+', text)
     return " ".join(parts[2:]) if len(parts) > 2 else ""
 
-# ← new: prompt that asks for bullet points
+# prompt that asks for a Markdown bullet list
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
-Provide the relevant details in bullet points:
+Summarize the following text as a Markdown bullet list.
+Each bullet must start with "- " and nothing else:
+
 {text}
 """
 )
@@ -48,7 +50,7 @@ def summarize_pdf(pdf_file):
         chain_type="refine",
         question_prompt=bullet_prompt
     )
-    raw = chain.run(docs)
+    raw = chain.run(input_documents=docs)
     return remove_first_two_sentences(raw)
 
 st.title("Ticket Summarizer")
@@ -56,5 +58,5 @@ st.title("Ticket Summarizer")
 pdf_file = st.file_uploader("Upload a PDF", type="pdf")
 if pdf_file and st.button("Generate Summary"):
     summary = summarize_pdf(pdf_file)
-    st.write("**Ticket Summary (bullet points):**")
-    st.write(summary)
+    st.markdown("**Ticket Summary (bullet points):**")
+    st.markdown(summary)
