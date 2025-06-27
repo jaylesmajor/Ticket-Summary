@@ -14,7 +14,7 @@ if api_key is None:
 os.environ["OPENAI_API_KEY"] = api_key
 llm = OpenAI(temperature=0, max_tokens=2000, top_p=0.9)
 
-# prompt that asks for a Markdown bullet list
+# your bullet‐point prompt
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
@@ -28,7 +28,7 @@ Summarize the following ticket information as a **detailed** Markdown bullet lis
 )
 
 def summarize_pdf(pdf_file):
-    # write uploaded bytes to a temp file
+    # write upload to temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(pdf_file.read())
         tmp_path = tmp.name
@@ -38,13 +38,13 @@ def summarize_pdf(pdf_file):
     docs = loader.load_and_split()
     os.remove(tmp_path)
 
-    # map_reduce chain for fuller bullet coverage
+    # **Correct** map_reduce chain parameters:
     chain = load_summarize_chain(
         llm,
-        chain_type="map_reduce",        # ← changed here
-        question_prompt=bullet_prompt
+        chain_type="map_reduce",
+        map_prompt=bullet_prompt,
+        combine_prompt=bullet_prompt
     )
-    # pass docs by keyword
     return chain.run(input_documents=docs)
 
 st.title("Ticket Summarizer")
