@@ -12,23 +12,19 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     raise RuntimeError("Missing OPENAI_API_KEY in your .env file")
 os.environ["OPENAI_API_KEY"] = api_key
-llm = OpenAI(temperature=0, max_tokens=2000, top_p=0.9)
+llm = OpenAI(temperature=0, max_tokens=1500, top_p=0.9)
 
-# your bullet‐point prompt
+# New: ask for bullets
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
-Summarize the following ticket information as a **detailed** Markdown bullet list.
-- Include at least 8 bullets covering every major section (overview, assignments, testing, pending, next steps, follow-ups, metadata, requester).
-- Each bullet must start with "- ".
-- Don’t omit minor but relevant details.
-
+Summarize the following text into concise bullet points:
 {text}
 """
 )
 
 def summarize_pdf(pdf_file):
-    # write upload to temp file
+    # write uploaded bytes to a temp file
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(pdf_file.read())
         tmp_path = tmp.name
@@ -36,21 +32,22 @@ def summarize_pdf(pdf_file):
     # load & split
     loader = PyPDFLoader(tmp_path)
     docs = loader.load_and_split()
+
+    # cleanup
     os.remove(tmp_path)
 
-    # **Correct** map_reduce chain parameters:
+    # summarize into bullets
     chain = load_summarize_chain(
         llm,
-        chain_type="map_reduce",
-        map_prompt=bullet_prompt,
-        combine_prompt=bullet_prompt
+        chain_type="refine",
+        question_prompt=bullet_prompt
     )
-    return chain.run(input_documents=docs)
+    return chain.run(docs)
 
 st.title("Ticket Summarizer")
 
 pdf_file = st.file_uploader("Upload a PDF", type="pdf")
 if pdf_file and st.button("Generate Summary"):
     summary = summarize_pdf(pdf_file)
-    st.markdown("**Ticket Summary (bullet points):**")
-    st.markdown(summary)
+    st.write("**Summary (in bullet points):**")
+    st.write(summary)
