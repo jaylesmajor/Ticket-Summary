@@ -24,7 +24,7 @@ def remove_first_two_sentences(text: str) -> str:
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
-Summarize the following text into concise bullet points:
+Get the details with names,dates,numbers and events on what happened:
 {text}
 """
 )
