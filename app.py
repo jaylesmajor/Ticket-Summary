@@ -24,7 +24,7 @@ def remove_first_two_sentences(text: str) -> str:
 bullet_prompt = PromptTemplate(
     input_variables=["text"],
     template="""
-Get the details with names,dates,numbers and events on what happened:
+Provide the relevant details in bullet points, arrange it from key persons and their contact details, then the details of the ticket, then what happened and how it happened and lastly the next steps :
 {text}
 """
 )
