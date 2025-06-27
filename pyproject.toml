@@ -4,7 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["jaylesmajor <143688733+jaylesmajor@users.noreply.github.com>"]
 readme = "README.md"
-
+package-mode = false
 [tool.poetry.dependencies]
 python = "^3.11"
 langchain = "^0.3.26"
