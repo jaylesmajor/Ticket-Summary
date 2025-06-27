@@ -30,7 +30,7 @@ def summarize_pdf(pdf_file):
     chain = load_summarize_chain(llm, chain_type="refine")
     return chain.run(docs)
 
-st.title("PDF Summarizer")
+st.title("Ticket Summarizer")
 
 # single-file uploader now
 pdf_file = st.file_uploader("Upload a PDF", type="pdf")
