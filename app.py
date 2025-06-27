@@ -1,5 +1,5 @@
 from langchain.chains.summarize import load_summarize_chain
-from langchain_community.document_loaders import PyPDFLoader
+from langchain.document_loaders import PyPDFLoader
 from langchain import OpenAI
 import streamlit as st
 import tempfile
