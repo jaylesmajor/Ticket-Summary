@@ -10,7 +10,7 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     raise RuntimeError("Missing OPENAI_API_KEY in your .env file")
-
+os.environ["OPENAI_API_KEY"] = api_key
 llm = OpenAI(temperature=0,max_tokens=1500,top_p=0.9)
 
 def summarize_pdf(pdf_file):
