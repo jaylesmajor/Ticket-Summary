@@ -4,7 +4,7 @@ from langchain import OpenAI
 import streamlit as st
 import tempfile
 import os
-import re                   # ← new import
+import re                   # ← already here for regex
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,10 +14,14 @@ if api_key is None:
 os.environ["OPENAI_API_KEY"] = api_key
 llm = OpenAI(temperature=0, max_tokens=1500, top_p=0.9)
 
-# ← new helper
-def remove_first_sentence(text: str) -> str:
-    parts = re.split(r'(?<=[\.!?])\s+', text, maxsplit=1)
-    return parts[1] if len(parts) > 1 else ""
+# ← new helper to remove the first two sentences
+def remove_first_two_sentences(text: str) -> str:
+    parts = re.split(r'(?<=[\.!?])\s+', text)
+    # If there are more than two sentences, drop parts[0] and parts[1]
+    if len(parts) > 2:
+        return " ".join(parts[2:])
+    # Otherwise, nothing remains once we remove up to two sentences
+    return ""
 
 def summarize_pdf(pdf_file):
     # write uploaded bytes to a temp file
@@ -36,8 +40,8 @@ def summarize_pdf(pdf_file):
     chain = load_summarize_chain(llm, chain_type="refine")
     raw = chain.run(docs)
 
-    # strip off the first sentence before returning
-    return remove_first_sentence(raw)
+    # strip off the first two sentences before returning
+    return remove_first_two_sentences(raw)
 
 st.title("Ticket Summarizer")
 
@@ -46,5 +50,5 @@ pdf_file = st.file_uploader("Upload a PDF", type="pdf")
 
 if pdf_file and st.button("Generate Summary"):
     summary = summarize_pdf(pdf_file)
-    st.write("**Summary:**")
+    st.write("**Summary (without first two sentences):**")
     st.write(summary)
