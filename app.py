@@ -50,5 +50,5 @@ pdf_file = st.file_uploader("Upload a PDF", type="pdf")
 
 if pdf_file and st.button("Generate Summary"):
     summary = summarize_pdf(pdf_file)
-    st.write("**Summary (without first two sentences):**")
+    st.write("**Ticket Summary**")
     st.write(summary)
