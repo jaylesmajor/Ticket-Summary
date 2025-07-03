@@ -20,7 +20,7 @@ llm = OpenAI(model_name="gpt-4",temperature=0, max_tokens=2000, top_p=0.9)
 # ── Prompts ─────────────────────────────────────────────────────────────────────
 map_template = """
 You are a ticket-summarization assistant.
-Extract the **core customer issue**, **key background details**, and **recommended next steps**.
+Extract the **Issue Summary**, **Root Cause**, **Resolutions being taken**, **Pending Items** and **Key Contacts**
 **Ignore** any system metadata such as "Canned Responses", "Comments", "Attachments", etc.
 
 Text:
