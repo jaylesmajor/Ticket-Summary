@@ -1,6 +1,6 @@
 from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import PyPDFLoader
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI     # ← updated import
 from langchain.prompts import PromptTemplate
 
 import streamlit as st
@@ -15,12 +15,17 @@ if not api_key:
 os.environ["OPENAI_API_KEY"] = api_key
 
 # ── LLM init ───────────────────────────────────────────────────────────────────
-llm = OpenAI(model_name="gpt-4",temperature=0, max_tokens=2000, top_p=0.9)
+llm = ChatOpenAI(
+    model_name="gpt-4",      # or "gpt-4-32k", etc.
+    temperature=0,
+    max_tokens=2000,
+    top_p=0.9,
+)
 
 # ── Prompts ─────────────────────────────────────────────────────────────────────
 map_template = """
 You are a ticket-summarization assistant.
-Extract the **Issue Summary**, **Root Cause**, **Resolutions being taken**, **Pending Items** and **Key Contacts**
+Extract the **Issue Summary**, **Root Cause**, **Resolutions being taken**, **Pending Items** and **Key Contacts**.
 **Ignore** any system metadata such as "Canned Responses", "Comments", "Attachments", etc.
 
 Text:
@@ -83,11 +88,9 @@ def summarize_pdf(pdf_file):
 st.title("Ticket Summarizer")
 
 pdf_file = st.file_uploader("Upload a PDF", type="pdf")
-if pdf_file:
-    if st.button("Generate Summary"):
-        with st.spinner("Summarizing… this may take a moment"):
-            summary = summarize_pdf(pdf_file)
-        if summary:
-            st.markdown("**Detailed Summary (bullet points):**")
-            # use code block to preserve bullets
-            st.markdown(f"```text\n{summary}\n```")
+if pdf_file and st.button("Generate Summary"):
+    with st.spinner("Summarizing… this may take a moment"):
+        summary = summarize_pdf(pdf_file)
+    if summary:
+        st.markdown("**Detailed Summary (bullet points):**")
+        st.markdown(f"```text\n{summary}\n```")
