@@ -4,85 +4,90 @@ from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 
 import streamlit as st
-import tempfile
-import os
+import tempfile, os
 from dotenv import load_dotenv
 
-# ── Env setup ───────────────────────────────────────────────────────────────────
+# ── Env setup ─────────────────────────────────────────────────────────────────── 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
-if api_key is None:
+if not api_key:
     raise RuntimeError("Missing OPENAI_API_KEY in your .env file")
 os.environ["OPENAI_API_KEY"] = api_key
 
 # ── LLM init ───────────────────────────────────────────────────────────────────
-llm = OpenAI(temperature=0, max_tokens=2000, top_p=0.9)
+llm = OpenAI(model_name="gpt-4",temperature=0, max_tokens=2000, top_p=0.9)
 
-# ── 1️⃣ Map prompt: focus on problem & actions, ignore metadata ────────────────
+# ── Prompts ─────────────────────────────────────────────────────────────────────
 map_template = """
 You are a ticket-summarization assistant.
 Extract the **core customer issue**, **key background details**, and **recommended next steps**.
-**Ignore** any system metadata sections such as "Canned Responses", "Comments", "Attachments", "History", or "Related Tickets".
+**Ignore** any system metadata such as "Canned Responses", "Comments", "Attachments", etc.
 
 Text:
 {text}
 
-Please output as bullet points ONLY. Use “- ” before each.
+Output as bullet points ONLY, with "- " at the start of each line.
 """
 map_prompt = PromptTemplate(input_variables=["text"], template=map_template)
 
-# ── 2️⃣ Refine prompt: deepen each bullet, keep metadata out ───────────────────
 refine_template = """
-We have an initial set of bullets summarizing the ticket:
+Initial bullets:
 
 {existing_answer}
 
-Here is the full ticket text again for context:
+Full ticket text:
 
 {text}
 
-Please **refine and expand each bullet** with 1–2 sentences giving more detail or examples,
-but still **do not** include any system metadata (e.g., “Comments”, “Attachments”, etc.).
-Keep “- ” at the start of each bullet ONLY.
+Refine and expand each bullet with 1–2 sentences, still as "- " bullets, excluding any metadata.
 """
 refine_prompt = PromptTemplate(
     input_variables=["existing_answer", "text"],
     template=refine_template
 )
 
-# ── Helper: enforce “- ” ────────────────────────────────────────────────────────
 def ensure_bullets(text: str) -> str:
     lines = [l.strip() for l in text.splitlines() if l.strip()]
-    def fix(line):
-        return line if line.startswith("- ") else f"- {line}"
-    return "\n".join(fix(l) for l in lines)
+    return "\n".join(l if l.startswith("- ") else f"- {l}" for l in lines)
 
-# ── Summarization fn ──────────────────────────────────────────────────────────
 def summarize_pdf(pdf_file):
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(pdf_file.read())
-        tmp_path = tmp.name
+    tmp_path = None
+    try:
+        # write to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(pdf_file.read())
+            tmp_path = tmp.name
 
-    loader = PyPDFLoader(tmp_path)
-    docs = loader.load_and_split()
-    os.remove(tmp_path)
+        # load & split
+        loader = PyPDFLoader(tmp_path)
+        docs = loader.load_and_split()
 
-    chain = load_summarize_chain(
-        llm,
-        chain_type="refine",
-        question_prompt=map_prompt,
-        refine_prompt=refine_prompt,
-    )
-    raw = chain.run(docs)
-    return ensure_bullets(raw)
+        # run refine chain
+        chain = load_summarize_chain(
+            llm,
+            chain_type="refine",
+            question_prompt=map_prompt,
+            refine_prompt=refine_prompt,
+        )
+        raw = chain.run(docs)
+        return ensure_bullets(raw)
+
+    except Exception as e:
+        st.error(f"Error generating summary: {e}")
+        return ""
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
 
 # ── Streamlit UI ───────────────────────────────────────────────────────────────
-# … your existing imports, prompts, summarize_pdf, etc. …
-
 st.title("Ticket Summarizer")
+
 pdf_file = st.file_uploader("Upload a PDF", type="pdf")
-if pdf_file and st.button("Generate Summary"):
-    summary = summarize_pdf(pdf_file)
-    # use markdown to render bullets
-    st.markdown("**Detailed Summary (bullet points):**")
-    st.markdown(summary)
+if pdf_file:
+    if st.button("Generate Summary"):
+        with st.spinner("Summarizing… this may take a moment"):
+            summary = summarize_pdf(pdf_file)
+        if summary:
+            st.markdown("**Detailed Summary (bullet points):**")
+            # use code block to preserve bullets
+            st.markdown(f"```text\n{summary}\n```")
