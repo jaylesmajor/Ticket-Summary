@@ -95,5 +95,5 @@ if pdf_file and st.button("Generate Summary"):
     with st.spinner("Summarizing… this may take a moment"):
         summary = summarize_pdf(pdf_file)
     if summary:
-        st.markdown("**Detailed Summary (bullet points):**")
-        st.markdown(f"```text\n{summary}\n```")
+        with st.expander("Show Detailed Summary"):
+            st.markdown(summary)
