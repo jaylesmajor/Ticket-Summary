@@ -19,11 +19,10 @@ os.environ["OPENAI_API_KEY"] = api_key
 llm = ChatOpenAI(
     model_name="gpt-4",
     temperature=0,
-    model_kwargs={
-        "top_p": 0.9,
-        "max_tokens": 2000
-    },
+    max_tokens=2000,              # ← explicitly here
+    model_kwargs={"top_p": 0.9},  # ← only top_p stays in model_kwargs
 )
+
 
 
 # ── Prompts ─────────────────────────────────────────────────────────────────────
