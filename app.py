@@ -1,7 +1,8 @@
 from langchain.chains.summarize import load_summarize_chain
-from langchain.document_loaders import PyPDFLoader
-from langchain.chat_models import ChatOpenAI     # ← updated import
+
 from langchain.prompts import PromptTemplate
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.chat_models import ChatOpenAI
 
 import streamlit as st
 import tempfile, os
@@ -16,11 +17,14 @@ os.environ["OPENAI_API_KEY"] = api_key
 
 # ── LLM init ───────────────────────────────────────────────────────────────────
 llm = ChatOpenAI(
-    model_name="gpt-4",      # or "gpt-4-32k", etc.
+    model_name="gpt-4",
     temperature=0,
-    max_tokens=2000,
-    top_p=0.9,
+    model_kwargs={
+        "top_p": 0.9,
+        "max_tokens": 2000
+    },
 )
+
 
 # ── Prompts ─────────────────────────────────────────────────────────────────────
 map_template = """
