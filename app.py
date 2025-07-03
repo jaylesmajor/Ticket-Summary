@@ -19,7 +19,7 @@ llm = ChatOpenAI(
     model_name="gpt-4",      # or "gpt-4-32k", etc.
     temperature=0,
     max_tokens=2000,
-    model_kwargs=0.9,
+    top_p=0.9,
 )
 
 # ── Prompts ─────────────────────────────────────────────────────────────────────
